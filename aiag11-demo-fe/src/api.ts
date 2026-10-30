@@ -91,7 +91,8 @@ export async function uploadReturnVideo(payload: ReturnVideoPayload) {
 
 export async function createOrder(payload: FormData) {
   const { data } = await api.post<{
-    orderCode: string;
+    _id: string;
+    serial: string;
     videoBoxingUrl: string;
   }>("/orders", payload, {
     headers: { "Content-Type": "multipart/form-data" },

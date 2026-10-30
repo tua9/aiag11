@@ -43,14 +43,14 @@ const returnStatusLabels = {
 
 const emptyOrderForm = (): NewOrder => ({
   orderCode: "",
-  serial: "",
-  name: "",
-  price: "",
-  address: "",
-  customerName: "",
-  customerAddress: "",
-  phoneNumber: "",
-  payMethod: "",
+  serial: `DEMO-${Date.now().toString(36).toUpperCase()}`,
+  name: "Sản phẩm mẫu",
+  price: "299000",
+  address: "12 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh",
+  customerName: "Nguyễn Văn An (mẫu)",
+  customerAddress: "12 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh",
+  phoneNumber: "0000000000",
+  payMethod: "COD",
 });
 
 function pageFromPath(path: string): AppPage {
@@ -67,7 +67,6 @@ function orderCodeFromPath(path: string) {
 }
 
 const orderFields = [
-  ["orderCode", "Mã đơn hàng", "VD: ORD-001", "text"],
   ["serial", "Serial", "Nhập serial sản phẩm", "text"],
   ["name", "Tên sản phẩm", "Nhập tên sản phẩm", "text"],
   ["price", "Giá", "0", "number"],
@@ -390,9 +389,9 @@ function App() {
     }
 
     const payload = new FormData();
-    Object.entries(newOrder).forEach(([field, value]) =>
-      payload.append(field, value.trim()),
-    );
+    Object.entries(newOrder)
+      .filter(([field]) => field !== "orderCode")
+      .forEach(([field, value]) => payload.append(field, value.trim()));
     payload.append("videoBoxing", boxingVideo);
 
     setCreateBusy(true);
@@ -400,7 +399,7 @@ function App() {
       const created = await createOrder(payload);
       setOrderFeedback({
         kind: "success",
-        text: `Đã tạo đơn ${created.orderCode} và lưu video lên Cloudinary.`,
+        text: `Đã tạo đơn ${created.serial} và lưu video lên Cloudinary.`,
       });
       setNewOrder(emptyOrderForm());
       setBoxingVideo(null);
@@ -927,34 +926,32 @@ function App() {
                 </div>
                 <form onSubmit={submitEditOrder}>
                   <div className="order-form-fields">
-                    {orderFields
-                      .slice(1)
-                      .map(([field, label, placeholder, type]) => (
-                        <div className="order-form-field" key={field}>
-                          <label
-                            className="field-label"
-                            htmlFor={`edit-${field}`}
-                          >
-                            {label} <span className="required">*</span>
-                          </label>
-                          <input
-                            id={`edit-${field}`}
-                            className="text-input order-code-input"
-                            type={type}
-                            min={type === "number" ? "0" : undefined}
-                            step={type === "number" ? "any" : undefined}
-                            value={editOrderForm[field]}
-                            onChange={(event) =>
-                              setEditOrderForm((current) => ({
-                                ...current,
-                                [field]: event.target.value,
-                              }))
-                            }
-                            placeholder={placeholder}
-                            required
-                          />
-                        </div>
-                      ))}
+                    {orderFields.map(([field, label, placeholder, type]) => (
+                      <div className="order-form-field" key={field}>
+                        <label
+                          className="field-label"
+                          htmlFor={`edit-${field}`}
+                        >
+                          {label} <span className="required">*</span>
+                        </label>
+                        <input
+                          id={`edit-${field}`}
+                          className="text-input order-code-input"
+                          type={type}
+                          min={type === "number" ? "0" : undefined}
+                          step={type === "number" ? "any" : undefined}
+                          value={editOrderForm[field]}
+                          onChange={(event) =>
+                            setEditOrderForm((current) => ({
+                              ...current,
+                              [field]: event.target.value,
+                            }))
+                          }
+                          placeholder={placeholder}
+                          required
+                        />
+                      </div>
+                    ))}
                   </div>
                   <div className="video-field order-video-field">
                     <div className="image-label-line">
@@ -1048,7 +1045,7 @@ function App() {
                   </h2>
                   <p>
                     {activePage === "create-order"
-                      ? "Video sẽ được lưu trên Cloudinary cùng đơn hàng."
+                      ? "Đã điền thông tin mẫu; hãy thay bằng dữ liệu thật trước khi tạo đơn."
                       : "Serial Code tùy chọn, chỉ tải video."}
                   </p>
                 </div>

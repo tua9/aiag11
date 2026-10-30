@@ -11,7 +11,7 @@ router.get("/", async (req, res) => {
   return res.json(orders);
 });
 
-router.post("/", upload.single("file"), async (req, res) => {
+router.post("/", upload.single("videoBoxing"), async (req, res) => {
   const { serial } = req.body;
   if (await Order.exists({ serial })) {
     return res
