@@ -15,6 +15,8 @@ const complaintPdfDirectory = fileURLToPath(
 app.use(cors());
 app.use(express.json({ limit: "30mb" }));
 app.use(morgan("dev"));
+app.set("json spaces", 2);
+
 app.use(
   "/files/complaints",
   express.static(complaintPdfDirectory, {

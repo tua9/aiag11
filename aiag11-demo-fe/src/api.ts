@@ -49,6 +49,7 @@ export type ReturnOrderRecord = {
   _id: string;
   serial?: string;
   returnVideoUrl: string;
+  videoBoxingUrl?: string | null;
   status: "pending" | "accepted" | "rejected";
   createdAt: string;
   updatedAt: string;

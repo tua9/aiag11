@@ -812,6 +812,7 @@ function App() {
                       <th>Trạng thái</th>
                       <th>Ngày tạo</th>
                       <th>Cập nhật</th>
+                      <th>Video đóng gói</th>
                       <th>Video hoàn trả</th>
                     </tr>
                   </thead>
@@ -845,6 +846,20 @@ function App() {
                           <td>
                             {new Date(returnOrder.updatedAt).toLocaleString(
                               "vi-VN",
+                            )}
+                          </td>
+                          <td>
+                            {returnOrder.videoBoxingUrl ? (
+                              <a
+                                className="video-link"
+                                href={returnOrder.videoBoxingUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                Xem video ↗
+                              </a>
+                            ) : (
+                              <span className="muted-value">Không có</span>
                             )}
                           </td>
                           <td>

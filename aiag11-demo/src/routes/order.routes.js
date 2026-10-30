@@ -27,8 +27,25 @@ router.post("/", upload.single("file"), async (req, res) => {
 });
 
 router.get("/returns", async (req, res) => {
-  const returnOrders = await ReturnOrder.find();
-  return res.json(returnOrders);
+  const returnOrders = await ReturnOrder.find().sort({ createdAt: -1 }).lean();
+  const serials = [
+    ...new Set(returnOrders.map(({ serial }) => serial).filter(Boolean)),
+  ];
+  const orders = serials.length
+    ? await Order.find({ serial: { $in: serials } })
+        .select("serial videoBoxingUrl")
+        .lean()
+    : [];
+  const videoUrlsBySerial = new Map(
+    orders.map(({ serial, videoBoxingUrl }) => [serial, videoBoxingUrl]),
+  );
+
+  return res.json(
+    returnOrders.map((returnOrder) => ({
+      ...returnOrder,
+      videoBoxingUrl: videoUrlsBySerial.get(returnOrder.serial) ?? null,
+    })),
+  );
 });
 
 function getVideoBuffer(dataUrl) {
