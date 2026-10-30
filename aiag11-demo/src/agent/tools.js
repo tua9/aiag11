@@ -1,6 +1,7 @@
 import Order from "../models/order.model.js";
 import ReturnOrder from "../models/return-order.model.js";
 import { createSellerComplaintPdf } from "../services/seller-complaint-pdf.service.js";
+import { compareProductVideo } from "../services/product-video-comparison.service.js";
 
 const MAX_RESULTS = 20;
 
@@ -24,4 +25,6 @@ export const tools = {
       .lean(),
   create_seller_complaint_pdf: async ({ serial } = {}) =>
     createSellerComplaintPdf({ serial }),
+  compare_product_video: async ({ orderId, returnOrderId } = {}) =>
+    compareProductVideo({ orderId, returnOrderId }),
 };

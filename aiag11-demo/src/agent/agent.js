@@ -47,6 +47,21 @@ export async function runAgent(question, image) {
       throw new Error("Tool không được phép");
     }
 
+    if (name === "compare_product_video") {
+      try {
+        const result = await tools[name](call.function.arguments ?? {});
+        return (
+          {
+            MATCH: "Match",
+            MISMATCH: "Not Match",
+            NEEDS_REVIEW: "Review",
+          }[result?.status] ?? "Review"
+        );
+      } catch (error) {
+        console.error("Product video comparison failed:", error);
+        return "Review";
+      }
+    }
     const result = await tools[name](call.function.arguments ?? {});
     if (result && typeof result.downloadUrl === "string") {
       downloads.push(result);

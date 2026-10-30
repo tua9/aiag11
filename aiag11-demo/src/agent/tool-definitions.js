@@ -54,4 +54,26 @@ export const definitions = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "compare_product_video",
+      description:
+        "So sánh video đóng hàng của Order và video mở hàng của ReturnOrder. Trả JSON status MATCH, MISMATCH hoặc NEEDS_REVIEW, giải thích, metric OpenCV và ảnh frame bằng chứng. Không tự kết luận MATCH nếu hình ảnh không đủ rõ.",
+      parameters: {
+        type: "object",
+        properties: {
+          orderId: {
+            type: "string",
+            description: "MongoDB _id của Order",
+          },
+          returnOrderId: {
+            type: "string",
+            description: "MongoDB _id của ReturnOrder",
+          },
+        },
+        required: ["orderId", "returnOrderId"],
+      },
+    },
+  },
 ];
