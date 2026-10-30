@@ -317,7 +317,7 @@ function App() {
     }
 
     const payload = {
-      ...(serialCode.trim() ? { serialCode: serialCode.trim() } : {}),
+      ...(serialCode.trim() ? { serial: serialCode.trim() } : {}),
       returnVideo: returnVideo.dataUrl,
     };
     const requestBody = JSON.stringify(payload);
@@ -333,42 +333,12 @@ function App() {
     setUploadBusy(true);
     try {
       const result = await uploadReturnVideo(payload);
-      const matchSummary =
-        result.comparison?.sameProduct === true
-          ? "Vật phẩm giống video đóng gói."
-          : result.comparison?.sameProduct === false
-            ? "Phát hiện khác biệt giữa hai video."
-            : "Chưa đủ dữ liệu để kết luận so sánh.";
-      const resultDetails = [
-        result.qrCodes?.length
-          ? `QR: ${result.qrCodes.slice(0, 3).join(", ")}`
-          : "Không đọc được mã QR",
-        result.serialCode
-          ? `Serial QR: ${result.serialCode}`
-          : "Không đọc được serial từ QR",
-        result.order?.orderCode
-          ? `Order: ${result.order.orderCode} · ${result.order.name}`
-          : result.checkStatus === "order_not_found"
-            ? "Không tìm thấy order theo serial QR"
-            : "",
-        result.identifiedItem?.item
-          ? `Vật phẩm: ${result.identifiedItem.item}${result.identifiedItem.visibleDetails ? ` (${result.identifiedItem.visibleDetails})` : ""}`
-          : "",
-        result.order ? matchSummary : "",
-        result.comparison?.reason
-          ? `Phân tích: ${result.comparison.reason}`
-          : result.comparison?.differences
-            ? `Khác biệt: ${Array.isArray(result.comparison.differences) ? result.comparison.differences.join(", ") : result.comparison.differences}`
-            : "",
-        result.processingErrors?.length
-          ? `Cần kiểm tra thêm: ${result.processingErrors.join("; ")}`
-          : "",
-      ].filter(Boolean);
       setUploadFeedback({
-        kind: result.checkStatus === "matched" ? "success" : "error",
-        text:
-          resultDetails.join(" · ") || "Đã lưu report kiểm tra video hoàn trả.",
+        kind: "success",
+        text: `Đã lưu video hàng hoàn${result.serial ? ` cho serial ${result.serial}` : ""}. Trạng thái: ${returnStatusLabels[result.status]}.`,
       });
+      setReturnVideo(null);
+      setSerialCode("");
     } catch (error) {
       setUploadFeedback({
         kind: "error",
@@ -1052,7 +1022,7 @@ function App() {
                 <span className="method-tag">
                   {activePage === "create-order"
                     ? "POST /orders · multipart"
-                    : "POST /orders/check-return"}
+                    : "POST /orders/returns"}
                 </span>
               </div>
 

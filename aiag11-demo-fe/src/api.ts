@@ -6,27 +6,17 @@ const api = axios.create({
 });
 
 export type ReturnVideoPayload = {
-  serialCode?: string;
+  serial?: string;
   returnVideo: string;
 };
 
 export type ReturnVideoResponse = {
-  _id?: string;
-  serialCode?: string;
-  returnVideoUrl?: string;
-  createdAt?: string;
-  order?: { orderCode: string; serial: string; name: string } | null;
-  qrCodes?: string[];
-  checkStatus?: "matched" | "mismatch" | "review" | "order_not_found";
-  identifiedItem?: { item?: string; visibleDetails?: string } | null;
-  comparison?: {
-    sameProduct?: boolean | null;
-    confidence?: number;
-    reason?: string;
-    differences?: string[] | string;
-  } | null;
-  processingErrors?: string[];
-  reportSaved?: boolean;
+  _id: string;
+  serial?: string;
+  returnVideoUrl: string;
+  status: "pending" | "accepted" | "rejected";
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type OrderRecord = {
@@ -83,7 +73,7 @@ export async function updateOrder(orderCode: string, payload: FormData) {
 
 export async function uploadReturnVideo(payload: ReturnVideoPayload) {
   const { data } = await api.post<ReturnVideoResponse>(
-    "/orders/check-return",
+    "/orders/returns",
     payload,
   );
   return data;

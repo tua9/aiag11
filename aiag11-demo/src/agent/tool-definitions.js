@@ -4,7 +4,7 @@ export const definitions = [
     function: {
       name: "get_orders",
       description:
-        "Tra cứu đơn hàng theo serial. Có thể bỏ serial để lấy tối đa 20 đơn mới nhất.",
+        "Danh sách các đơn hàng hoặc tra cứu đơn hàng theo serial. Có thể bỏ serial để lấy tối đa 20 đơn mới nhất.",
       parameters: {
         type: "object",
         properties: {
