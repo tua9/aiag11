@@ -526,13 +526,11 @@ function App() {
   return (
     <div className="app-shell">
       <header className="topbar">
-        <a className="brand" href="#main" aria-label="Fulfill home">
+        <a className="brand" href="#main" aria-label="FixIt home">
           <span className="brand-mark" aria-hidden="true">
             F
           </span>
-          <span>
-            fulfill<span className="brand-dot">.</span>
-          </span>
+          <span>FixIt</span>
         </a>
         <nav className="topnav" aria-label="Điều hướng chính">
           <a
