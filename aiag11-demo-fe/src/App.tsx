@@ -4,8 +4,10 @@ import {
   createOrder,
   getOrder,
   getOrders,
+  getReturnOrders,
   getApiErrorMessage,
   type OrderRecord,
+  type ReturnOrderRecord,
   sendChatMessage,
   updateOrder,
   uploadReturnVideo,
@@ -26,7 +28,18 @@ type NewOrder = {
   phoneNumber: string;
   payMethod: string;
 };
-type AppPage = "overview" | "create-order" | "orders" | "edit-order";
+type AppPage =
+  | "overview"
+  | "create-order"
+  | "orders"
+  | "returns"
+  | "edit-order";
+
+const returnStatusLabels = {
+  pending: "Chờ xử lý",
+  accepted: "Đã nhận",
+  rejected: "Từ chối",
+} as const;
 
 const emptyOrderForm = (): NewOrder => ({
   orderCode: "",
@@ -43,6 +56,7 @@ const emptyOrderForm = (): NewOrder => ({
 function pageFromPath(path: string): AppPage {
   if (path === "/orders/new") return "create-order";
   if (path === "/orders") return "orders";
+  if (path === "/returns") return "returns";
   if (/^\/orders\/[^/]+$/.test(path)) return "edit-order";
   return "overview";
 }
@@ -95,6 +109,12 @@ function App() {
   );
   const [ordersError, setOrdersError] = useState("");
   const [ordersSearch, setOrdersSearch] = useState("");
+  const [returnOrders, setReturnOrders] = useState<ReturnOrderRecord[]>([]);
+  const [returnOrdersLoading, setReturnOrdersLoading] = useState(
+    () => pageFromPath(window.location.pathname) === "returns",
+  );
+  const [returnOrdersError, setReturnOrdersError] = useState("");
+  const [returnOrdersSearch, setReturnOrdersSearch] = useState("");
   const [editingOrder, setEditingOrder] = useState<OrderRecord | null>(null);
   const [editOrderForm, setEditOrderForm] = useState<NewOrder>(emptyOrderForm);
   const [editVideo, setEditVideo] = useState<File | null>(null);
@@ -167,6 +187,30 @@ function App() {
   }, [activePage]);
 
   useEffect(() => {
+    if (activePage !== "returns") return;
+    let active = true;
+    getReturnOrders()
+      .then((result) => {
+        if (active) {
+          setReturnOrders(result);
+          setReturnOrdersError("");
+        }
+      })
+      .catch((error) => {
+        if (active)
+          setReturnOrdersError(
+            getApiErrorMessage(error, "Không thể tải danh sách hàng hoàn trả."),
+          );
+      })
+      .finally(() => {
+        if (active) setReturnOrdersLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [activePage]);
+
+  useEffect(() => {
     if (activePage !== "edit-order" || !currentOrderCode) return;
     let active = true;
     getOrder(currentOrderCode)
@@ -174,15 +218,15 @@ function App() {
         if (!active) return;
         setEditingOrder(order);
         setEditOrderForm({
-          orderCode: order.orderCode,
+          orderCode: order.orderCode ?? "",
           serial: order.serial,
-          name: order.name,
-          price: String(order.price),
-          address: order.address,
-          customerName: order.customerName,
-          customerAddress: order.customerAddress,
-          phoneNumber: order.phoneNumber,
-          payMethod: order.payMethod,
+          name: order.name ?? "",
+          price: String(order.price ?? ""),
+          address: order.address ?? "",
+          customerName: order.customerName ?? "",
+          customerAddress: order.customerAddress ?? "",
+          phoneNumber: order.phoneNumber ?? "",
+          payMethod: order.payMethod ?? "",
         });
         setEditVideo(null);
       })
@@ -225,6 +269,10 @@ function App() {
     if (targetPage === "orders") {
       setOrdersLoading(true);
       setOrdersError("");
+    }
+    if (targetPage === "returns") {
+      setReturnOrdersLoading(true);
+      setReturnOrdersError("");
     }
     if (targetPage === "edit-order") {
       setEditLoading(true);
@@ -518,6 +566,17 @@ function App() {
             Đơn hàng
           </a>
           <a
+            href="/returns"
+            className={activePage === "returns" ? "active" : ""}
+            aria-current={activePage === "returns" ? "page" : undefined}
+            onClick={(event) => {
+              event.preventDefault();
+              navigateToPath("/returns");
+            }}
+          >
+            Hàng hoàn trả
+          </a>
+          <a
             href="/orders/new"
             className={activePage === "create-order" ? "active" : ""}
             aria-current={activePage === "create-order" ? "page" : undefined}
@@ -548,9 +607,11 @@ function App() {
                 ? "ORDERS / NEW ORDER"
                 : activePage === "orders"
                   ? "ORDERS / REGISTER"
-                  : activePage === "edit-order"
-                    ? `ORDERS / ${currentOrderCode}`
-                    : "RETURNS / INSPECTION"}
+                  : activePage === "returns"
+                    ? "RETURNS / REGISTER"
+                    : activePage === "edit-order"
+                      ? `ORDERS / ${currentOrderCode}`
+                      : "RETURNS / INSPECTION"}
             </p>
             <h1>
               {activePage === "create-order" ? (
@@ -560,6 +621,10 @@ function App() {
               ) : activePage === "orders" ? (
                 <>
                   Đơn <span>hàng.</span>
+                </>
+              ) : activePage === "returns" ? (
+                <>
+                  Hàng <span>hoàn trả.</span>
                 </>
               ) : activePage === "edit-order" ? (
                 <>
@@ -576,9 +641,11 @@ function App() {
                 ? "Nhập thông tin đơn hàng và tải video đóng gói lên cùng lúc."
                 : activePage === "orders"
                   ? "Tra cứu đơn hàng, thông tin khách và video đóng gói."
-                  : activePage === "edit-order"
-                    ? "Cập nhật thông tin hoặc thay video đóng gói."
-                    : "Đối soát hàng hoàn trả, xác nhận vấn đề và trao đổi cùng Agent."}
+                  : activePage === "returns"
+                    ? "Theo dõi serial, trạng thái và video của hàng hoàn trả."
+                    : activePage === "edit-order"
+                      ? "Cập nhật thông tin hoặc thay video đóng gói."
+                      : "Đối soát hàng hoàn trả, xác nhận vấn đề và trao đổi cùng Agent."}
             </p>
           </div>
           {activePage === "create-order" || activePage === "edit-order" ? (
@@ -620,7 +687,7 @@ function App() {
                     className="text-input"
                     type="search"
                     aria-label="Tìm đơn hàng"
-                    placeholder="Tìm mã đơn, khách hàng, sản phẩm"
+                    placeholder="Tìm serial hoặc ID"
                     value={ordersSearch}
                     onChange={(event) => setOrdersSearch(event.target.value)}
                   />
@@ -647,21 +714,17 @@ function App() {
                 <table className="orders-table">
                   <thead>
                     <tr>
-                      <th>Mã đơn</th>
-                      <th>Sản phẩm</th>
-                      <th>Khách hàng</th>
-                      <th>Giá trị</th>
+                      <th>Serial</th>
+                      <th>ID đơn hàng</th>
                       <th>Ngày tạo</th>
-                      <th>Video</th>
-                      <th>
-                        <span className="sr-only">Thao tác</span>
-                      </th>
+                      <th>Cập nhật</th>
+                      <th>Video đóng gói</th>
                     </tr>
                   </thead>
                   <tbody>
                     {orders
                       .filter((order) =>
-                        `${order.orderCode} ${order.name} ${order.customerName}`
+                        `${order.serial} ${order._id}`
                           .toLocaleLowerCase("vi")
                           .includes(
                             ordersSearch.trim().toLocaleLowerCase("vi"),
@@ -669,36 +732,13 @@ function App() {
                       )
                       .map((order) => (
                         <tr key={order._id}>
+                          <td className="order-serial">{order.serial}</td>
+                          <td className="order-id">{order._id}</td>
                           <td>
-                            <button
-                              className="order-code-link"
-                              type="button"
-                              onClick={() =>
-                                navigateToPath(
-                                  `/orders/${encodeURIComponent(order.orderCode)}`,
-                                )
-                              }
-                            >
-                              {order.orderCode}
-                            </button>
-                          </td>
-                          <td>{order.name}</td>
-                          <td>
-                            <span className="customer-name">
-                              {order.customerName}
-                            </span>
-                            <span className="customer-phone">
-                              {order.phoneNumber}
-                            </span>
+                            {new Date(order.createdAt).toLocaleString("vi-VN")}
                           </td>
                           <td>
-                            {new Intl.NumberFormat("vi-VN").format(order.price)}{" "}
-                            ₫
-                          </td>
-                          <td>
-                            {new Date(order.createdAt).toLocaleDateString(
-                              "vi-VN",
-                            )}
+                            {new Date(order.updatedAt).toLocaleString("vi-VN")}
                           </td>
                           <td>
                             {order.videoBoxingUrl ? (
@@ -714,30 +754,124 @@ function App() {
                               <span className="muted-value">Chưa có</span>
                             )}
                           </td>
-                          <td>
-                            <button
-                              className="edit-order-button"
-                              type="button"
-                              onClick={() =>
-                                navigateToPath(
-                                  `/orders/${encodeURIComponent(order.orderCode)}`,
-                                )
-                              }
-                            >
-                              Sửa
-                            </button>
-                          </td>
                         </tr>
                       ))}
                   </tbody>
                 </table>
                 {orders.filter((order) =>
-                  `${order.orderCode} ${order.name} ${order.customerName}`
+                  `${order.serial} ${order._id}`
                     .toLocaleLowerCase("vi")
                     .includes(ordersSearch.trim().toLocaleLowerCase("vi")),
                 ).length === 0 && (
                   <div className="orders-state">
                     Không tìm thấy đơn hàng phù hợp.
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+        ) : activePage === "returns" ? (
+          <section
+            className="panel orders-panel"
+            aria-labelledby="returns-title"
+          >
+            <div className="orders-toolbar">
+              <div>
+                <h2 id="returns-title">Danh sách hàng hoàn trả</h2>
+                <p>{returnOrders.length} lượt hoàn trả</p>
+              </div>
+              <label className="search-box">
+                <span className="search-icon" aria-hidden="true">
+                  ⌕
+                </span>
+                <input
+                  className="text-input"
+                  type="search"
+                  aria-label="Tìm hàng hoàn trả"
+                  placeholder="Tìm serial hoặc ID"
+                  value={returnOrdersSearch}
+                  onChange={(event) =>
+                    setReturnOrdersSearch(event.target.value)
+                  }
+                />
+              </label>
+            </div>
+            {returnOrdersLoading ? (
+              <p className="orders-state">Đang tải hàng hoàn trả...</p>
+            ) : returnOrdersError ? (
+              <div className="feedback error" role="alert">
+                {returnOrdersError}
+              </div>
+            ) : returnOrders.length === 0 ? (
+              <div className="orders-state">Chưa có lượt hoàn trả nào.</div>
+            ) : (
+              <div className="orders-table-wrap">
+                <table className="orders-table returns-table">
+                  <thead>
+                    <tr>
+                      <th>Serial</th>
+                      <th>ID</th>
+                      <th>Trạng thái</th>
+                      <th>Ngày tạo</th>
+                      <th>Cập nhật</th>
+                      <th>Video hoàn trả</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {returnOrders
+                      .filter((returnOrder) =>
+                        `${returnOrder.serial ?? ""} ${returnOrder._id}`
+                          .toLocaleLowerCase("vi")
+                          .includes(
+                            returnOrdersSearch.trim().toLocaleLowerCase("vi"),
+                          ),
+                      )
+                      .map((returnOrder) => (
+                        <tr key={returnOrder._id}>
+                          <td className="order-serial">
+                            {returnOrder.serial || "—"}
+                          </td>
+                          <td className="order-id">{returnOrder._id}</td>
+                          <td>
+                            <span
+                              className={`return-status ${returnOrder.status}`}
+                            >
+                              {returnStatusLabels[returnOrder.status]}
+                            </span>
+                          </td>
+                          <td>
+                            {new Date(returnOrder.createdAt).toLocaleString(
+                              "vi-VN",
+                            )}
+                          </td>
+                          <td>
+                            {new Date(returnOrder.updatedAt).toLocaleString(
+                              "vi-VN",
+                            )}
+                          </td>
+                          <td>
+                            <a
+                              className="video-link"
+                              href={returnOrder.returnVideoUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              Xem video ↗
+                            </a>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+                {returnOrders.filter((returnOrder) =>
+                  `${returnOrder.serial ?? ""} ${returnOrder._id}`
+                    .toLocaleLowerCase("vi")
+                    .includes(
+                      returnOrdersSearch.trim().toLocaleLowerCase("vi"),
+                    ),
+                ).length === 0 && (
+                  <div className="orders-state">
+                    Không tìm thấy lượt hoàn trả phù hợp.
                   </div>
                 )}
               </div>
@@ -763,7 +897,9 @@ function App() {
                 <div className="edit-order-meta">
                   <div>
                     <span className="meta-label">MÃ ĐƠN</span>
-                    <strong>{editingOrder.orderCode}</strong>
+                    <strong>
+                      {editingOrder.orderCode ?? editingOrder.serial}
+                    </strong>
                   </div>
                   {editingOrder.videoBoxingUrl && (
                     <a

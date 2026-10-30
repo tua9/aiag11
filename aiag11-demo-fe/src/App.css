@@ -350,9 +350,12 @@
 }
 .orders-table {
   width: 100%;
-  min-width: 760px;
+  min-width: 680px;
   border-collapse: collapse;
   text-align: left;
+}
+.returns-table {
+  min-width: 860px;
 }
 .orders-table th {
   padding: 11px 13px;
@@ -372,7 +375,7 @@
 .orders-table tbody tr:hover {
   background: #fbfcfa;
 }
-.order-code-link,
+.order-serial,
 .video-link,
 .edit-order-button {
   padding: 0;
@@ -383,7 +386,7 @@
   text-decoration: none;
   cursor: pointer;
 }
-.order-code-link:hover,
+.order-serial:hover,
 .video-link:hover,
 .edit-order-button:hover {
   color: #0f554a;
@@ -391,6 +394,29 @@
 }
 .video-link {
   font: 650 10px var(--sans);
+}
+.order-id {
+  color: #78867e !important;
+  font: 10px var(--mono) !important;
+}
+.return-status {
+  display: inline-flex;
+  padding: 5px 7px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 700;
+}
+.return-status.pending {
+  color: #8a641c;
+  background: #fff4d8;
+}
+.return-status.accepted {
+  color: #176c5d;
+  background: #e8f4ed;
+}
+.return-status.rejected {
+  color: #a74d42;
+  background: #fff0e9;
 }
 .edit-order-button {
   color: #68786f;
@@ -785,8 +811,8 @@
   margin-bottom: 14px;
 }
 .chat-transcript {
-  min-height: 116px;
-  max-height: 190px;
+  min-height: 316px;
+  max-height: 390px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;

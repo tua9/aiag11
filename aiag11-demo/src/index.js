@@ -1,34 +1,28 @@
 import "dotenv/config";
 import express from "express";
-import { runAgent } from "./agent/agent.js";
+import { fileURLToPath } from "node:url";
 import connectDatabase from "./config/database.js";
 import errorHandler from "./middleware/error-handler.js";
-import upload from "./middleware/upload.js";
 import apiRouter from "./routes/index.js";
+import morgan from "morgan";
+import cors from "cors";
 
 const app = express();
+const complaintPdfDirectory = fileURLToPath(
+  new URL("../assets/generated-complaints/", import.meta.url),
+);
+
+app.use(cors());
 app.use(express.json({ limit: "30mb" }));
-
-app.post("/api/agent", upload.single("image"), async (req, res) => {
-  try {
-    const question = req.body.question;
-
-    if (!question) {
-      return res.status(400).json({
-        error: "Vui lòng nhập question",
-      });
-    }
-
-    const image = req.file?.buffer;
-
-    const answer = await runAgent(question, image);
-
-    res.json({ answer });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Agent xử lý thất bại" });
-  }
-});
+app.use(morgan("dev"));
+app.use(
+  "/files/complaints",
+  express.static(complaintPdfDirectory, {
+    setHeaders(response) {
+      response.setHeader("Content-Disposition", "attachment");
+    },
+  }),
+);
 
 app.use("/api", apiRouter);
 

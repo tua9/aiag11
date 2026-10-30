@@ -6,6 +6,11 @@ import { uploadVideo } from "../services/cloudinary.service.js";
 
 const router = Router();
 
+router.get("/", async (req, res) => {
+  const orders = await Order.find();
+  return res.json(orders);
+});
+
 router.post("/", upload.single("file"), async (req, res) => {
   const { serial } = req.body;
   if (await Order.exists({ serial })) {
@@ -19,6 +24,11 @@ router.post("/", upload.single("file"), async (req, res) => {
   const videoBoxingUrl = await uploadVideo(req.file.buffer, "orders/boxing");
   const order = await Order.create({ ...req.body, videoBoxingUrl });
   return res.status(201).json(order);
+});
+
+router.get("/returns", async (req, res) => {
+  const returnOrders = await ReturnOrder.find();
+  return res.json(returnOrders);
 });
 
 function getVideoBuffer(dataUrl) {

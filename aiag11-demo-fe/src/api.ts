@@ -31,22 +31,36 @@ export type ReturnVideoResponse = {
 
 export type OrderRecord = {
   _id: string;
-  orderCode: string;
   serial: string;
-  name: string;
-  price: number;
-  address: string;
-  customerName: string;
-  customerAddress: string;
-  phoneNumber: string;
-  payMethod: string;
   videoBoxingUrl: string;
+  createdAt: string;
+  updatedAt: string;
+  orderCode?: string;
+  name?: string;
+  price?: number;
+  address?: string;
+  customerName?: string;
+  customerAddress?: string;
+  phoneNumber?: string;
+  payMethod?: string;
+};
+
+export type ReturnOrderRecord = {
+  _id: string;
+  serial?: string;
+  returnVideoUrl: string;
+  status: "pending" | "accepted" | "rejected";
   createdAt: string;
   updatedAt: string;
 };
 
 export async function getOrders() {
   const { data } = await api.get<OrderRecord[]>("/orders");
+  return data;
+}
+
+export async function getReturnOrders() {
+  const { data } = await api.get<ReturnOrderRecord[]>("/orders/returns");
   return data;
 }
 

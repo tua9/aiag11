@@ -1,23 +1,28 @@
 import ollama from "ollama";
 import { tools } from "./tools.js";
+import { definitions } from "./tool-definitions.js";
 
-const definitions = [
-  {
-    type: "function",
-    function: {
-      name: "get_current_time",
-      description: "Lấy thời gian hiện tại",
-      parameters: {
-        type: "object",
-        properties: {},
-        required: [],
-      },
-    },
-  },
-];
+const toolCapabilities = definitions
+  .map(
+    ({ function: definition }) =>
+      `${definition.name}: ${definition.description}`,
+  )
+  .join("\n");
+
+const systemPrompt = `Chỉ được mô tả hoặc nhận thực hiện các khả năng được định nghĩa bởi tools dưới đây. 
+Khi được hỏi bạn có thể làm gì, chỉ liệt kê các khả năng này và điều kiện sử dụng; 
+không tự nhận có khả năng khác. 
+Nếu được yêu cầu ngoài phạm vi tools, 
+hãy nói rõ hiện tại bạn chỉ hỗ trợ các khả năng được liệt kê. Nếu kết quả tool có downloadUrl, hãy gửi chính xác URL đó cho người dùng.\n\n
+Tools hiện có:\n${toolCapabilities},
+Luôn luôn trả lời ngắn chọn, súc tích, không dài dòng.`;
 
 export async function runAgent(question, image) {
   const messages = [
+    {
+      role: "system",
+      content: systemPrompt,
+    },
     {
       role: "user",
       content: question,
@@ -33,6 +38,7 @@ export async function runAgent(question, image) {
   });
 
   messages.push(response.message);
+  const downloads = [];
 
   for (const call of response.message.tool_calls ?? []) {
     const name = call.function.name;
@@ -41,12 +47,15 @@ export async function runAgent(question, image) {
       throw new Error("Tool không được phép");
     }
 
-    const result = tools[name]();
+    const result = await tools[name](call.function.arguments ?? {});
+    if (result && typeof result.downloadUrl === "string") {
+      downloads.push(result);
+    }
 
     messages.push({
       role: "tool",
       tool_name: name,
-      content: String(result),
+      content: typeof result === "string" ? result : JSON.stringify(result),
     });
   }
 
@@ -58,7 +67,14 @@ export async function runAgent(question, image) {
       stream: false,
     });
 
-    return finalResponse.message.content;
+    const answer = finalResponse.message.content;
+    const downloadLinks = downloads
+      .filter(({ downloadUrl }) => !answer.includes(downloadUrl))
+      .map(
+        ({ downloadUrl, note }) =>
+          `[Tải đơn khiếu nại PDF](${downloadUrl})${note ? `\n\n${note}` : ""}`,
+      );
+    return [answer, ...downloadLinks].filter(Boolean).join("\n\n");
   }
 
   return response.message.content;
