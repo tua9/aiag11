@@ -221,7 +221,7 @@ function buildComplaintPdf(data, filePath) {
 
     sectionTitle(doc, "II. THÔNG TIN ĐƠN HÀNG", 226);
     drawFields(doc, 241, [
-      ["Mã đơn hàng", data.orderId],
+      ["Serial", data.serial],
       [
         "Ngày gửi / Ngày nhận hàng hoàn",
         `${data.sentDate} / ${data.returnDate}`,
@@ -446,7 +446,7 @@ export async function createSellerComplaintPdf({ serial } = {}) {
     shopId: markMock("demo-shop-2026"),
     contact: markMock("0900 000 123 / seller@example.test"),
     warehouse: markMock("12 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh"),
-    orderId: order?._id?.toString() || markMock("DH-MOCK-2026-001"),
+    serial: order?.serial || sampleSerial,
     sentDate: order?.createdAt
       ? formatDate(order.createdAt)
       : markMock(formatDate(today)),
@@ -474,7 +474,9 @@ export async function createSellerComplaintPdf({ serial } = {}) {
   };
 
   await mkdir(outputDirectory, { recursive: true });
-  const fileName = `seller-complaint-${randomUUID()}.pdf`;
+  const fileSerial =
+    sampleSerial.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 80) || "unknown";
+  const fileName = `seller-complaint-${fileSerial}-${randomUUID().slice(0, 8).toUpperCase()}.pdf`;
   const filePath = path.join(outputDirectory, fileName);
   await buildComplaintPdf(data, filePath);
 

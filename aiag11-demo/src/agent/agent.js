@@ -31,7 +31,7 @@ export async function runAgent(question, image) {
   ];
 
   const response = await ollama.chat({
-    model: process.env.OLLAMA_MODEL ?? "qwen3-vl:4b",
+    model: process.env.OLLAMA_MODEL ?? "gemma4:e2b",
     messages,
     tools: definitions,
     stream: false,
@@ -61,7 +61,7 @@ export async function runAgent(question, image) {
 
   if (response.message.tool_calls?.length) {
     const finalResponse = await ollama.chat({
-      model: process.env.OLLAMA_MODEL ?? "qwen3-vl:4b",
+      model: process.env.OLLAMA_MODEL ?? "gemma4:e2b",
       messages,
       tools: definitions,
       stream: false,
