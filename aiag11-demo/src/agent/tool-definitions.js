@@ -22,7 +22,7 @@ export const definitions = [
     function: {
       name: "get_return_orders",
       description:
-        "Tra cứu hàng hoàn trả theo serial. Có thể bỏ serial để lấy tối đa 20 lượt hoàn trả mới nhất.",
+        "Danh sách các đơn hàng hoàn trả hoặc tra cứu hàng hoàn trả theo serial. Có thể bỏ serial để lấy tối đa 20 lượt hoàn trả mới nhất.",
       parameters: {
         type: "object",
         properties: {

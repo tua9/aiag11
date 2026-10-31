@@ -1,7 +1,6 @@
 :root {
-  --sans: "Avenir Next", Avenir, "Segoe UI", sans-serif;
-  --heading:
-    "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  --sans: "Noto Sans", "Segoe UI", sans-serif;
+  --heading: "Noto Serif", Georgia, serif;
   --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   font-family: var(--sans);
   font-size: 14px;
