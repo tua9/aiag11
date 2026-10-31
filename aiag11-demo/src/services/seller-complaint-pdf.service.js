@@ -534,12 +534,14 @@ export async function createSellerComplaintPdf({
   serial,
   issueDescription,
 } = {}) {
-  const normalizedSerial = typeof serial === "string" ? serial.trim() : "";
+  const normalizedSerial =
+    typeof serial === "string" || typeof serial === "number"
+      ? String(serial).trim()
+      : "";
   const normalizedIssueDescription =
     typeof issueDescription === "string"
       ? issueDescription.trim().slice(0, 500)
       : "";
-  const selections = getComplaintSelections(normalizedIssueDescription);
   const [order, returnOrder] = normalizedSerial
     ? await Promise.all([
         Order.findOne({ serial: normalizedSerial })
@@ -554,6 +556,10 @@ export async function createSellerComplaintPdf({
 
   const today = new Date();
   const sampleSerial = normalizedSerial || "SKU-MOCK-2026-001";
+  const mockDescription = `Đơn ${sampleSerial}: hàng hoàn về bị trầy xước và thiếu phụ kiện so với lúc gửi. Đề nghị kiểm tra, đối chiếu dữ liệu vận chuyển và camera.`;
+  const descriptionForSelections =
+    normalizedIssueDescription || mockDescription;
+  const selections = getComplaintSelections(descriptionForSelections);
   const data = {
     sellerName: markMock("Cửa hàng Demo Việt"),
     shopId: markMock("demo-shop-2026"),
@@ -580,11 +586,7 @@ export async function createSellerComplaintPdf({
     returnedCondition: markMock("Có vết xước, thiếu phụ kiện"),
     accessories: markMock("Cáp sạc, hộp, tem niêm phong"),
     returnedAccessories: markMock("Thiếu cáp sạc"),
-    description:
-      normalizedIssueDescription ||
-      markMock(
-        `Đơn ${sampleSerial}: video đóng gói thể hiện sản phẩm nguyên vẹn trước khi bàn giao. Hàng hoàn nhận được có dấu hiệu trầy xước và thiếu phụ kiện. Thông tin mô tả là dữ liệu minh họa, cần đối chiếu chứng cứ thực tế.`,
-      ),
+    description: normalizedIssueDescription || markMock(mockDescription),
     ...selections,
     reference: `SC-${today.toISOString().slice(0, 10).replaceAll("-", "")}-${randomUUID().slice(0, 8).toUpperCase()}`,
   };
