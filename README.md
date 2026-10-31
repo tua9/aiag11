@@ -24,11 +24,10 @@ npm install
 Tạo file `aiag11-demo/.env`:
 
 ```env
-MONGODB_URI=mongodb://127.0.0.1:27017/aiag11
+MONGODB_URI=mongodb://127.0.0.1:27017/aiag11-demo2
 PORT=8888
 OLLAMA_MODEL=gemma4:e2b
-PUBLIC_API_URL=http://localhost:8888
-CLOUDINARY_URL=cloudinary://API_KEY:API_SECRET@CLOUD_NAME
+CLOUDINARY_URL=cloudinary://434581923739578:E85CUVL9sJZcUGTXdTKfNS2HDyI@tuan89-cloudinary
 ```
 
 Thay `MONGODB_URI` bằng URI MongoDB của bạn. Chỉ cần `CLOUDINARY_URL` khi sử dụng upload video.

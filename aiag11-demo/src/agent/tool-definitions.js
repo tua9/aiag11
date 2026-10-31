@@ -38,6 +38,24 @@ export const definitions = [
   {
     type: "function",
     function: {
+      name: "accept_return_order",
+      description:
+        "Xác nhận nhận hàng hoàn theo serial. Chỉ gọi khi người dùng yêu cầu chấp nhận; chuyển ReturnOrder pending mới nhất của serial đó sang accepted.",
+      parameters: {
+        type: "object",
+        properties: {
+          serial: {
+            type: "string",
+            description: "Serial sản phẩm, ví dụ GYWV6VTK",
+          },
+        },
+        required: ["serial"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "create_seller_complaint_pdf",
       description:
         "Tạo đơn khiếu nại người bán thành PDF theo serial. issueDescription không bắt buộc; nếu không có thì tự điền mô tả mô phỏng và đánh dấu [MOCK]. Tra cứu order/return-order theo serial, dữ liệu còn thiếu cũng được đánh dấu [MOCK]. Trả về URL tải file.",
