@@ -40,17 +40,20 @@ export const definitions = [
     function: {
       name: "create_seller_complaint_pdf",
       description:
-        "Tạo đơn khiếu nại của người bán thành file PDF theo mẫu. Có thể truyền serial để điền dữ liệu đơn hàng và hàng hoàn; thông tin còn thiếu sẽ được điền dữ liệu mô phỏng và đánh dấu [MOCK]. Trả về URL tải file.",
+        "Tạo đơn khiếu nại người bán thành PDF từ serial và mô tả vấn đề. Tra cứu order/return-order theo serial; dữ liệu còn thiếu được mock và đánh dấu [MOCK]. Trả về URL tải file.",
       parameters: {
         type: "object",
         properties: {
           serial: {
             type: "string",
-            description:
-              "Serial sản phẩm để tra cứu order và return order (không bắt buộc)",
+            description: "Serial sản phẩm trong order và return-order",
+          },
+          issueDescription: {
+            type: "string",
+            description: "Mô tả vấn đề người bán đã nhập khi xác nhận lỗi",
           },
         },
-        required: [],
+        required: ["serial", "issueDescription"],
       },
     },
   },

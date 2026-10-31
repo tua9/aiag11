@@ -23,8 +23,8 @@ export const tools = {
       .sort({ createdAt: -1 })
       .limit(MAX_RESULTS)
       .lean(),
-  create_seller_complaint_pdf: async ({ serial } = {}) =>
-    createSellerComplaintPdf({ serial }),
+  create_seller_complaint_pdf: async ({ serial, issueDescription } = {}) =>
+    createSellerComplaintPdf({ serial, issueDescription }),
   compare_product_video: async ({ orderId, returnOrderId } = {}) =>
     compareProductVideo({ orderId, returnOrderId }),
 };

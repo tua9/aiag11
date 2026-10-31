@@ -47,6 +47,83 @@ function markMock(value) {
   return `${value} [MOCK]`;
 }
 
+function normalizeVietnameseText(value) {
+  return value
+    .toLocaleLowerCase("vi")
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/đ/g, "d");
+}
+
+function includesAny(text, phrases) {
+  return phrases.some((phrase) => text.includes(phrase));
+}
+
+function getComplaintSelections(description) {
+  const text = normalizeVietnameseText(description);
+  const has = (...phrases) => includesAny(text, phrases);
+  const damaged = has(
+    "hu hong",
+    "bi hong",
+    "tray xuoc",
+    "tray",
+    "xuoc",
+    "vo",
+    "be",
+    "mop",
+  );
+  const brokenSeal =
+    has("niem phong", "tem") && has("mo", "rach", "phat", "thay doi", "bi pha");
+  const refundRejection =
+    (has("tu choi") && has("hoan tien")) || has("huy yeu cau hoan tien");
+  const inspectShipping =
+    has("kiem tra", "doi chieu") && has("van chuyen", "camera");
+
+  return {
+    wrongProduct: has(
+      "sai san pham",
+      "san pham khac",
+      "khong dung san pham",
+      "khong dung mo ta",
+      "trao nham",
+      "nham hang",
+    ),
+    missingItems: has(
+      "thieu so luong",
+      "thieu phu kien",
+      "thieu hang",
+      "thieu do",
+    ),
+    damaged,
+    usedProduct: has("da qua su dung", "da su dung", "co dau hieu su dung"),
+    brokenSeal,
+    otherDiscrepancy: has(
+      "ly do khac",
+      "khong khop video",
+      "khong trung khop video",
+    ),
+    rejectRefundRequested: refundRejection,
+    keepOrderAmount: has(
+      "giu nguyen so tien",
+      "khong hoan tien",
+      "khong chap nhan hoan tien",
+    ),
+    inspectShipping,
+    requestCompensation: has("boi hoan", "boi thuong", "yeu cau san boi"),
+    otherResolution: has("yeu cau khac"),
+    boxingEvidence:
+      has("video") && has("dong goi", "dong hang", "truoc khi gui"),
+    returnOpeningEvidence:
+      has("video") && has("mo kien", "mo hang", "hang hoan", "mo hop"),
+    returnPhotos:
+      has("anh", "hinh") &&
+      has("hang hoan", "tem niem phong", "san pham nhan ve"),
+    shippingDocuments: has("phieu gui", "hoa don", "ma van don", "van don"),
+    orderScreenshots: has("anh chup man hinh", "screenshot"),
+    otherEvidence: has("tai lieu khac", "bang chung khac", "chung cu khac"),
+  };
+}
+
 function formatDate(value) {
   return new Date(value).toLocaleDateString("vi-VN");
 }
@@ -253,18 +330,39 @@ function buildComplaintPdf(data, filePath) {
       left + 3,
       474,
       "Sai sản phẩm / không đúng mô tả",
-      true,
+      data.wrongProduct,
       250,
     );
-    drawCheckbox(doc, left + 263, 474, "Thiếu số lượng / phụ kiện", false, 250);
-    drawCheckbox(doc, left + 3, 490, "Hàng bị hư hỏng, trầy xước", true, 250);
-    drawCheckbox(doc, left + 263, 490, "Hàng đã qua sử dụng", false, 250);
+    drawCheckbox(
+      doc,
+      left + 263,
+      474,
+      "Thiếu số lượng / phụ kiện",
+      data.missingItems,
+      250,
+    );
+    drawCheckbox(
+      doc,
+      left + 3,
+      490,
+      "Hàng bị hư hỏng, trầy xước",
+      data.damaged,
+      250,
+    );
+    drawCheckbox(
+      doc,
+      left + 263,
+      490,
+      "Hàng đã qua sử dụng",
+      data.usedProduct,
+      250,
+    );
     drawCheckbox(
       doc,
       left + 3,
       506,
       "Niêm phong bị mở / rách / thay đổi",
-      false,
+      data.brokenSeal,
       250,
     );
     drawCheckbox(
@@ -272,7 +370,7 @@ function buildComplaintPdf(data, filePath) {
       left + 263,
       506,
       "Lý do khác: không khớp video",
-      false,
+      data.otherDiscrepancy,
       250,
     );
 
@@ -301,7 +399,7 @@ function buildComplaintPdf(data, filePath) {
       left + 3,
       627,
       "Từ chối / hủy yêu cầu hoàn tiền cho đơn hàng này",
-      false,
+      data.rejectRefundRequested,
       255,
     );
     drawCheckbox(
@@ -309,7 +407,7 @@ function buildComplaintPdf(data, filePath) {
       left + 263,
       627,
       "Giữ nguyên số tiền đơn hàng",
-      false,
+      data.keepOrderAmount,
       250,
     );
     drawCheckbox(
@@ -317,7 +415,7 @@ function buildComplaintPdf(data, filePath) {
       left + 3,
       642,
       "Kiểm tra, đối chiếu dữ liệu vận chuyển và camera",
-      true,
+      data.inspectShipping,
       255,
     );
     drawCheckbox(
@@ -325,7 +423,7 @@ function buildComplaintPdf(data, filePath) {
       left + 263,
       642,
       "Yêu cầu bồi hoàn theo chính sách sàn",
-      false,
+      data.requestCompensation,
       250,
     );
     drawCheckbox(
@@ -333,7 +431,7 @@ function buildComplaintPdf(data, filePath) {
       left + 3,
       657,
       "Yêu cầu khác: xem xét bảo vệ quyền lợi người bán",
-      false,
+      data.otherResolution,
       255,
     );
 
@@ -359,7 +457,7 @@ function buildComplaintPdf(data, filePath) {
       left + 3,
       710,
       "Ảnh chụp hàng hoàn về, tem niêm phong",
-      false,
+      data.returnPhotos,
       250,
     );
     drawCheckbox(
@@ -367,7 +465,7 @@ function buildComplaintPdf(data, filePath) {
       left + 263,
       710,
       "Phiếu gửi hàng, hóa đơn, mã vận đơn",
-      true,
+      data.shippingDocuments,
       250,
     );
     drawCheckbox(
@@ -375,10 +473,17 @@ function buildComplaintPdf(data, filePath) {
       left + 3,
       725,
       "Ảnh chụp màn hình đơn hàng, yêu cầu hoàn",
-      false,
+      data.orderScreenshots,
       250,
     );
-    drawCheckbox(doc, left + 263, 725, "Khác: dữ liệu minh họa", false, 250);
+    drawCheckbox(
+      doc,
+      left + 263,
+      725,
+      "Khác: dữ liệu minh họa",
+      data.otherEvidence,
+      250,
+    );
 
     text(
       doc,
@@ -425,8 +530,16 @@ function buildComplaintPdf(data, filePath) {
   });
 }
 
-export async function createSellerComplaintPdf({ serial } = {}) {
+export async function createSellerComplaintPdf({
+  serial,
+  issueDescription,
+} = {}) {
   const normalizedSerial = typeof serial === "string" ? serial.trim() : "";
+  const normalizedIssueDescription =
+    typeof issueDescription === "string"
+      ? issueDescription.trim().slice(0, 500)
+      : "";
+  const selections = getComplaintSelections(normalizedIssueDescription);
   const [order, returnOrder] = normalizedSerial
     ? await Promise.all([
         Order.findOne({ serial: normalizedSerial })
@@ -467,9 +580,12 @@ export async function createSellerComplaintPdf({ serial } = {}) {
     returnedCondition: markMock("Có vết xước, thiếu phụ kiện"),
     accessories: markMock("Cáp sạc, hộp, tem niêm phong"),
     returnedAccessories: markMock("Thiếu cáp sạc"),
-    description: markMock(
-      `Đơn ${sampleSerial}: video đóng gói thể hiện sản phẩm nguyên vẹn trước khi bàn giao. Hàng hoàn nhận được có dấu hiệu trầy xước và thiếu phụ kiện. Thông tin mô tả là dữ liệu minh họa, cần đối chiếu chứng cứ thực tế.`,
-    ),
+    description:
+      normalizedIssueDescription ||
+      markMock(
+        `Đơn ${sampleSerial}: video đóng gói thể hiện sản phẩm nguyên vẹn trước khi bàn giao. Hàng hoàn nhận được có dấu hiệu trầy xước và thiếu phụ kiện. Thông tin mô tả là dữ liệu minh họa, cần đối chiếu chứng cứ thực tế.`,
+      ),
+    ...selections,
     reference: `SC-${today.toISOString().slice(0, 10).replaceAll("-", "")}-${randomUUID().slice(0, 8).toUpperCase()}`,
   };
 

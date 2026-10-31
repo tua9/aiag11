@@ -90,14 +90,13 @@ export async function createOrder(payload: FormData) {
   return data;
 }
 
-export async function confirmOrder(
-  orderCode: string,
-  issueDescription: string,
-) {
-  const { data } = await api.post<{ confirmed: boolean; orderCode: string }>(
-    `/orders/${encodeURIComponent(orderCode)}/confirmation`,
-    { confirmed: true, issueDescription },
-  );
+export async function confirmOrder(serial: string, issueDescription: string) {
+  const { data } = await api.post<{
+    confirmed: boolean;
+    serial: string;
+    issueDescription: string;
+    complaintPdf: { fileName: string; downloadUrl: string; note: string };
+  }>("/confirmation", { serial, confirmed: true, issueDescription });
   return data;
 }
 

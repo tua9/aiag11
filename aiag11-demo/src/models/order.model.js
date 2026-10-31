@@ -11,6 +11,9 @@ const orderSchema = new mongoose.Schema(
     phoneNumber: { type: String, required: false, trim: true },
     payMethod: { type: String, required: false, trim: true },
     videoBoxingUrl: { type: String, required: true },
+    confirmed: { type: Boolean, default: false },
+    issueDescription: { type: String, trim: true },
+    confirmedAt: { type: Date },
   },
   {
     timestamps: true,

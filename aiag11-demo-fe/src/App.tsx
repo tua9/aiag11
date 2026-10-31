@@ -97,7 +97,7 @@ function App() {
   const [path, setPath] = useState(() => window.location.pathname);
   const activePage = pageFromPath(path);
   const currentOrderCode = orderCodeFromPath(path);
-  const [orderCode, setOrderCode] = useState("");
+  const [confirmationSerial, setConfirmationSerial] = useState("");
   const [serialCode, setSerialCode] = useState("");
   const [returnVideo, setReturnVideo] = useState<VideoUpload | null>(null);
   const [boxingVideo, setBoxingVideo] = useState<File | null>(null);
@@ -141,6 +141,7 @@ function App() {
   const [confirmationFeedback, setConfirmationFeedback] = useState<{
     kind: "success" | "error";
     text: string;
+    downloadUrl?: string;
   } | null>(null);
   const [chatInput, setChatInput] = useState("");
   const [chatBusy, setChatBusy] = useState(false);
@@ -423,14 +424,19 @@ function App() {
   const submitConfirmation = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setConfirmationFeedback(null);
-    if (!confirmed || !issueDescription.trim() || !orderCode.trim()) return;
+    if (!confirmed || !issueDescription.trim() || !confirmationSerial.trim())
+      return;
 
     setConfirmationBusy(true);
     try {
-      await confirmOrder(orderCode.trim(), issueDescription.trim());
+      const result = await confirmOrder(
+        confirmationSerial.trim(),
+        issueDescription.trim(),
+      );
       setConfirmationFeedback({
         kind: "success",
-        text: `Đã lưu xác nhận cho đơn ${orderCode.trim()}.`,
+        text: `Đã lưu xác nhận cho serial ${confirmationSerial.trim()}.`,
+        downloadUrl: result.complaintPdf.downloadUrl,
       });
     } catch (error) {
       setConfirmationFeedback({
@@ -1201,15 +1207,20 @@ function App() {
                     <span className="method-tag">POST /confirmation</span>
                   </div>
                   <form onSubmit={submitConfirmation}>
-                    <label className="field-label" htmlFor="order-code">
-                      Mã đơn hàng <span className="required">*</span>
+                    <label
+                      className="field-label"
+                      htmlFor="confirmation-serial"
+                    >
+                      Serial <span className="required">*</span>
                     </label>
                     <input
-                      id="order-code"
+                      id="confirmation-serial"
                       className="text-input order-code-input confirmation-order-code"
-                      value={orderCode}
-                      onChange={(event) => setOrderCode(event.target.value)}
-                      placeholder="VD: ORD-001"
+                      value={confirmationSerial}
+                      onChange={(event) =>
+                        setConfirmationSerial(event.target.value)
+                      }
+                      placeholder="Nhập serial sản phẩm"
                       required
                     />
                     <label className="field-label" htmlFor="issue-description">
@@ -1223,6 +1234,7 @@ function App() {
                         setIssueDescription(event.target.value)
                       }
                       placeholder="Mô tả tình trạng sản phẩm..."
+                      maxLength={500}
                       required
                     />
                     <label className="confirm-check">
@@ -1240,6 +1252,16 @@ function App() {
                         role="status"
                       >
                         {confirmationFeedback.text}
+                        {confirmationFeedback.downloadUrl && (
+                          <a
+                            className="video-link"
+                            href={confirmationFeedback.downloadUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            Tải đơn khiếu nại PDF ↗
+                          </a>
+                        )}
                       </div>
                     )}
                     <button
@@ -1248,7 +1270,7 @@ function App() {
                       disabled={
                         !confirmed ||
                         !issueDescription.trim() ||
-                        !orderCode.trim() ||
+                        !confirmationSerial.trim() ||
                         confirmationBusy
                       }
                     >

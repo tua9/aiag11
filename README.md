@@ -75,7 +75,7 @@ Mở URL Vite hiển thị trong Terminal, thường là `http://localhost:5173`
 
 - `get_orders`: tra cứu đơn hàng theo serial; bỏ serial để lấy tối đa 20 đơn mới nhất.
 - `get_return_orders`: tra cứu hàng hoàn trả theo serial; bỏ serial để lấy tối đa 20 lượt mới nhất.
-- `create_seller_complaint_pdf`: tạo PDF đơn khiếu nại. Có thể yêu cầu trong chat, ví dụ: `Tạo đơn khiếu nại cho serial GYWV6VTK`. Tool trả link tải PDF; file được lưu tại `aiag11-demo/assets/generated-complaints/`.
+- `create_seller_complaint_pdf`: tạo PDF từ `serial` và `issueDescription`. Có thể yêu cầu trong chat, ví dụ: `Tạo đơn khiếu nại cho serial GYWV6VTK vì hàng hoàn bị thiếu phụ kiện`. Tool trả link tải PDF; file được lưu tại `aiag11-demo/assets/generated-complaints/`. Gửi `POST /api/confirmation` cũng tạo PDF và trả `complaintPdf.downloadUrl`.
 - `compare_product_video`: so sánh video đóng hàng và mở hàng theo `orderId` và `returnOrderId` (MongoDB `_id`). Kết quả JSON có `status` (`MATCH`, `MISMATCH`, `NEEDS_REVIEW`), giải thích, metric OpenCV và frame chứng cứ dạng data URL. Chỉ chấp nhận video HTTPS từ `res.cloudinary.com`, tối đa 100 MB và 5 phút mỗi video.
 
 Nếu không truyền serial, PDF dùng dữ liệu mô phỏng và đánh dấu `[MOCK]`. Nếu tìm thấy return-order tương ứng, khi tạo PDF thành công, trạng thái của lượt hoàn được chuyển thành `rejected`. Kiểm tra các trường `[MOCK]` và thay bằng dữ liệu thật trước khi gửi đơn.
